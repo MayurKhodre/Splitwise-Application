@@ -1,1 +1,1 @@
-<!-- Chat-Room-Application -->
+<!-- Splitwise-Application -->
