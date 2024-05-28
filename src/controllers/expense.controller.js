@@ -50,6 +50,50 @@ const addExpense = asyncHandler( async (req, res) => {
         );
 });
 
+const editExpense = asyncHandler( async (req, res) => {
+    // get the expense id from req.params
+    // get the updated details from req.body
+    // create an object to replace the expense object present in db
+    // update the expense in the database
+    // return the status to the frontend
+    try {
+        const { expenseId } = req.params;
+        
+        if(!expenseId) {
+            throw new ApiError(401, "Expense ID is required");
+        }
+    
+        const { amount, description } = req.body;
+    
+        if(!amount && !description) {
+            throw new ApiError(401, "Amount or description should be updated");
+        }
+
+        const updatedExpense = await Expense.findByIdAndUpdate(
+            expenseId,
+            {
+                $set: {
+                    amount: amount,
+                    description: description
+                }
+            },
+            { new: true }
+        );
+        
+        if(!updatedExpense) {
+            throw new ApiError(401, "Something went wrong while updating expense");
+        }
+    
+        return res
+        .status(200)
+        .json(new ApiResponse(200, updatedExpense, "Expense details updated successfully"));
+
+    } catch (error) {
+        throw new ApiError(401, "Something went wrong while updating expense");
+    }
+})
+
 export {
-    addExpense
+    addExpense,
+    editExpense
 };
