@@ -87,13 +87,43 @@ const editExpense = asyncHandler( async (req, res) => {
         return res
         .status(200)
         .json(new ApiResponse(200, updatedExpense, "Expense details updated successfully"));
-
+        
     } catch (error) {
+        console.log('Error while editing expense:', error);
         throw new ApiError(401, "Something went wrong while updating expense");
     }
 })
 
+const getExpenses = asyncHandler(async (req, res) => {
+    // get the user from req.user
+    // fetch all the expenses of the user from the database
+    // return the expenses to the frontend    
+
+    const user = req.user;
+
+    if (!user) {
+        throw new ApiError(401, "User not found");
+    }
+
+    try {
+        const expenses = await Expense.find({ paidBy: user._id });
+
+        if (!expenses || expenses.length === 0) {
+            throw new ApiError(404, "No expenses found for this user");
+        }
+
+        return res
+            .status(200)
+            .json(new ApiResponse(200, expenses, "Expenses retrieved successfully"));
+
+    } catch (error) {
+        console.error('Error retrieving expenses:', error);
+        throw new ApiError(500, "Internal Server Error");
+    }
+});
+
 export {
     addExpense,
-    editExpense
+    editExpense,
+    getExpenses
 };
