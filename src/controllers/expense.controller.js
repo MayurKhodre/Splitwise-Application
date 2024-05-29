@@ -3,11 +3,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Expense } from "../models/expense.model.js";
 
-// addExpense
-// editExpense
-// getExpense
-// deleteExpense
-
 const addExpense = asyncHandler( async (req, res) => {
     // get the amount & description from req.body
     // get the user details from req
@@ -122,8 +117,39 @@ const getExpenses = asyncHandler(async (req, res) => {
     }
 });
 
+const deleteExpense = asyncHandler(async (req, res) => {
+    const user = req.user;
+
+    if (!user) {
+        throw new ApiError(401, "User not authenticated");
+    }
+
+    const { expenseId } = req.params;
+
+    if (!expenseId) {
+        throw new ApiError(400, "Expense ID is required");
+    }
+
+    try {
+        const expense = await Expense.findById(expenseId);
+
+        if (!expense || expense.paidBy.toString() !== user._id.toString()) {
+            throw new ApiError(404, "Expense not found or not authorized to delete this expense");
+        }
+        // await expense.remove();
+        await Expense.deleteOne({ _id: expenseId });
+
+        return res.status(200).json(new ApiResponse(200, {}, "Expense deleted successfully"));
+
+    } catch (error) {
+        console.error('Error deleting expense:', error);
+        throw new ApiError(500, "Internal Server Error");
+    }
+});
+
 export {
     addExpense,
     editExpense,
-    getExpenses
+    getExpenses,
+    deleteExpense
 };
