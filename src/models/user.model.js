@@ -37,7 +37,11 @@ const userSchema = new Schema({
     },
     refreshToken: {
         type: String
-    }
+    },
+    groups: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Group'
+    }]
 },
 {
     timestamps: true
