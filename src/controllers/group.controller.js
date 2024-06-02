@@ -117,26 +117,37 @@ const addExpenseToGroup = asyncHandler(async (req, res) => {
     }
 });
 
-// Get all groups for a user
-// router.get("/users/:userId/groups", async (req, res) => {
-//     try {
-//         const { userId } = req.params;
-//         const user = await User.findById(userId).populate("groups");
-//         res.status(200).json(user.groups);
-//     } catch (error) {
-//         res.status(500).json({ error: "Unable to get groups" });
-//     }
-// });
+const getGroupExpense = asyncHandler(async (req, res) => {
+    try {
+        const { groupId } = req.params;
+        if(!groupId){
+            throw new ApiError(401, "Group ID is required");
+        }
 
-// Get all expenses for a group
-// router.get("/groups/:groupId/expenses", async (req, res) => {
-//     try {
-//         const { groupId } = req.params;
-//         const expenses = await GroupExpense.find({ group: groupId });
-//         res.status(200).json(expenses);
-//     } catch (error) {
-//         res.status(500).json({ error: "Unable to get expenses" });
-//     }
-// });
+        const expenses = await GroupExpense.find({ group: groupId });
+        if(!expenses){
+            throw new ApiError(401, "Group not found");
+        }
 
-export { createNewGroup, addExpenseToGroup };
+        res.status(200).json(expenses);
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                expenses,
+                "Groups expenses sended successfully"
+            )
+        );
+
+    } catch (error) {
+        console.log('Error while fetching group expenses: ', error);
+        throw new ApiError(500, "Unable to get group expenses");
+    }
+});
+
+export {
+    createNewGroup,
+    addExpenseToGroup,
+    getGroupExpense
+};
