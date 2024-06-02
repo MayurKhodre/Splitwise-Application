@@ -316,6 +316,34 @@ const updateUserCoverImage = asyncHandler(async (req, res) => {
     );
 });
 
+const getGroups = asyncHandler(async (req, res) => {
+    try {
+        const { userId } = req.params;
+        if(!userId){
+            throw new ApiError(401, "User ID is required");
+        }
+
+        const user = await User.findById(userId).populate("groups");
+        if(!user){
+            throw new ApiError(401, "User not found");
+        }
+
+        return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                user.groups,
+                "Groups sended successfully"
+            )
+        );
+
+    } catch (error) {
+        console.log('Error while fetching groups: ', error);
+        throw new ApiError(500, "Failed to send groups");
+    }
+});
+
 export {
     registerUser,
     loginUser,
@@ -325,5 +353,6 @@ export {
     getCurrentUser,
     updateAccountDetails,
     updateUserAvatar,
-    updateUserCoverImage
+    updateUserCoverImage,
+    getGroups
 };
