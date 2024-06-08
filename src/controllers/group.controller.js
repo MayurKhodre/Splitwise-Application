@@ -66,55 +66,49 @@ const addExpenseToGroup = asyncHandler(async (req, res) => {
     // save the expense to db
     // update the expense to each member(user)
     // return success and expense info
-    try {
-        const { description, amount, paidBy, splitBetween } = req.body;
-        if (
-            [description, amount, paidBy, splitBetween].some(
-                (field) => field?.trim() === ""
-            )
-        ) {
-            throw new ApiError(400, "All fields are required");
-        }
 
-        const { groupId } = req.params;
+    const { description, amount, paidBy, splitBetween } = req.body;
+    if (
+        !description?.trim() || typeof amount !== "number" || isNaN(amount) || amount <= 0 ||
+        !paidBy?.trim() || !Array.isArray(splitBetween) || splitBetween.length === 0) {
+        throw new ApiError(400, "All fields are required and must be valid");
+    }
 
-        if (!groupId) {
-            throw new ApiError(400, "Group ID is required");
-        }
+    const { groupId } = req.params;
 
-        const groupExpense = new GroupExpense({
-            description,
-            amount,
-            group: groupId,
-            paidBy,
-            splitBetween,
-        });
+    if (!groupId) {
+        throw new ApiError(400, "Group ID is required");
+    }
 
-        // const split = calculateSplit(amount, splitBetween);
-        // expense.splitDetails = split; // Assume you add a splitDetails field to GroupExpense model
+    const groupExpense = new GroupExpense({
+        description,
+        amount,
+        group: groupId,
+        paidBy,
+        splitBetween,
+    });
 
-        await groupExpense.save();
+    // const split = calculateSplit(amount, splitBetween);
+    // expense.splitDetails = split; // Assume you add a splitDetails field to GroupExpense model
 
-        const createdGroupExpense = await GroupExpense.findById(
-            groupExpense._id
-        );
-        if (!createdGroupExpense) {
-            throw new ApiError(500, "Failed to create group expense");
-        }
+    await groupExpense.save();
 
-        return res
-            .status(200)
-            .json(
-                new ApiResponse(
-                    200,
-                    createdGroupExpense,
-                    "Group expense created successfully"
-                )
-            );
-    } catch (error) {
-        console.log("Error in creating group expense");
+    const createdGroupExpense = await GroupExpense.findById(
+        groupExpense._id
+    );
+    if (!createdGroupExpense) {
         throw new ApiError(500, "Failed to create group expense");
     }
+
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(
+                200,
+                createdGroupExpense,
+                "Group expense created successfully"
+            )
+        );
 });
 
 const getGroupExpense = asyncHandler(async (req, res) => {
@@ -129,7 +123,6 @@ const getGroupExpense = asyncHandler(async (req, res) => {
             throw new ApiError(401, "Group not found");
         }
 
-        res.status(200).json(expenses);
         return res
         .status(200)
         .json(
