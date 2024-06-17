@@ -139,8 +139,39 @@ const getGroupExpense = asyncHandler(async (req, res) => {
     }
 });
 
+const getUserGroups = asyncHandler(async (req, res) => {
+    // get userId from req.params
+    // validated user exists or not
+    // if user exists get the list of groups from user schema
+    // send the group list as response
+    try {
+        const { userId } = req.params;
+
+        if (!userId) {
+            throw new ApiError(401, "User ID is required");
+        }
+
+        const user = await User.findById(userId).populate('groups');
+
+        if (!user) {
+            throw new ApiError(404, "User not found");
+        }
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(200, user.groups, "Groups retrieved successfully")
+            );
+    } catch (error) {
+        console.log("Error in retrieving groups: ", error);
+        throw new ApiError(401, "Failed to retrieve groups");
+    }
+});
+
+
 export {
     createNewGroup,
     addExpenseToGroup,
-    getGroupExpense
+    getGroupExpense,
+    getUserGroups
 };
