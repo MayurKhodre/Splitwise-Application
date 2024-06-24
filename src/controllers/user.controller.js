@@ -344,6 +344,32 @@ const getGroups = asyncHandler(async (req, res) => {
     }
 });
 
+const getUser = asyncHandler(async (req, res) => {
+    const { email } = req.params;
+    console.log('email: ', email);
+    if(!email){
+        throw new ApiError(401, "Email Id is required");
+    }
+    
+    const user = await User.findOne({email}).select(
+        "-password -refreshToken"
+    );
+    
+    if(!user){
+        throw new ApiError(401, "User with given email not found!");
+    }
+
+    return res
+    .status(200)
+    .json( 
+        new ApiResponse(
+            200,
+            user,
+            "User fetched successfully"
+        )
+    )
+});
+
 export {
     registerUser,
     loginUser,
@@ -354,5 +380,6 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getGroups
+    getGroups,
+    getUser
 };
