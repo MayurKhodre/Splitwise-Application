@@ -370,6 +370,25 @@ const getUser = asyncHandler(async (req, res) => {
     )
 });
 
+const getAllUsers = asyncHandler(async (req, res) => {
+    try {
+        // Find all users and only return their _id and userName
+        const users = await User.find({}, '_id userName');
+        
+        if (!users || users.length === 0) {
+            throw new ApiError(404, "No users found");
+        }
+
+        return res.status(200).json(
+            new ApiResponse(200, users, "Users fetched successfully")
+        );
+    } catch (error) {
+        console.log('Error fetching users: ', error);
+        throw new ApiError(500, "Failed to fetch users");
+    }
+});
+
+
 export {
     registerUser,
     loginUser,
@@ -381,5 +400,6 @@ export {
     updateUserAvatar,
     updateUserCoverImage,
     getGroups,
-    getUser
+    getUser,
+    getAllUsers
 };

@@ -5,7 +5,7 @@ import { createNewGroup, addExpenseToGroup, getGroupExpense, getUserGroups } fro
 const router = Router();
 
 router.route("/").post(verifyJWT, createNewGroup);
-router.route("/:userId").get(verifyJWT, getUserGroups);
+router.route("/:email").get(verifyJWT, getUserGroups);
 router.route("/:groupId/expenses").post(verifyJWT, addExpenseToGroup);
 router.route("/:groupId/expenses").get(verifyJWT, getGroupExpense);
 

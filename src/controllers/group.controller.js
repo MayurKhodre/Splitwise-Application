@@ -140,18 +140,18 @@ const getGroupExpense = asyncHandler(async (req, res) => {
 });
 
 const getUserGroups = asyncHandler(async (req, res) => {
-    // get userId from req.params
+    // get email from req.params
     // validated user exists or not
     // if user exists get the list of groups from user schema
     // send the group list as response
     try {
-        const { userId } = req.params;
+        const { email } = req.params;
 
-        if (!userId) {
-            throw new ApiError(401, "User ID is required");
+        if (!email) {
+            throw new ApiError(401, "Email is required");
         }
 
-        const user = await User.findById(userId).populate('groups');
+        const user = await User.findOne({ email }).populate('groups');
 
         if (!user) {
             throw new ApiError(404, "User not found");
@@ -164,7 +164,7 @@ const getUserGroups = asyncHandler(async (req, res) => {
             );
     } catch (error) {
         console.log("Error in retrieving groups: ", error);
-        throw new ApiError(401, "Failed to retrieve groups");
+        throw new ApiError(500, "Failed to retrieve groups");
     }
 });
 
