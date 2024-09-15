@@ -168,10 +168,36 @@ const getUserGroups = asyncHandler(async (req, res) => {
     }
 });
 
+const getGroupMembers = asyncHandler(async (req, res) => {
+    // Get groupId from request parameters
+    const { groupId } = req.params;
+
+    // Validate groupId
+    if (!groupId) {
+        throw new ApiError(400, "Group ID is required");
+    }
+
+    // Find the group by ID and populate only 'username' and '_id' of members
+    const group = await Group.findById(groupId).populate('members', 'userName _id');
+
+    // If group is not found, throw an error
+    if (!group) {
+        throw new ApiError(404, "Group not found");
+    }
+
+    // Respond with the list of members' username and _id
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, group.members, "Group members retrieved successfully")
+        );
+});
+
 
 export {
     createNewGroup,
     addExpenseToGroup,
     getGroupExpense,
-    getUserGroups
+    getUserGroups,
+    getGroupMembers
 };
