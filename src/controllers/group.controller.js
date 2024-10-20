@@ -140,18 +140,18 @@ const getGroupExpense = asyncHandler(async (req, res) => {
 });
 
 const getUserGroups = asyncHandler(async (req, res) => {
-    // get userId from req.params
+    // get email from req.params
     // validated user exists or not
     // if user exists get the list of groups from user schema
     // send the group list as response
     try {
-        const { userId } = req.params;
+        const { email } = req.params;
 
-        if (!userId) {
-            throw new ApiError(401, "User ID is required");
+        if (!email) {
+            throw new ApiError(401, "Email is required");
         }
 
-        const user = await User.findById(userId).populate('groups');
+        const user = await User.findOne({ email }).populate('groups');
 
         if (!user) {
             throw new ApiError(404, "User not found");
@@ -164,8 +164,33 @@ const getUserGroups = asyncHandler(async (req, res) => {
             );
     } catch (error) {
         console.log("Error in retrieving groups: ", error);
-        throw new ApiError(401, "Failed to retrieve groups");
+        throw new ApiError(500, "Failed to retrieve groups");
     }
+});
+
+const getGroupMembers = asyncHandler(async (req, res) => {
+    // Get groupId from request parameters
+    const { groupId } = req.params;
+
+    // Validate groupId
+    if (!groupId) {
+        throw new ApiError(400, "Group ID is required");
+    }
+
+    // Find the group by ID and populate only 'username' and '_id' of members
+    const group = await Group.findById(groupId).populate('members', 'userName _id');
+
+    // If group is not found, throw an error
+    if (!group) {
+        throw new ApiError(404, "Group not found");
+    }
+
+    // Respond with the list of members' username and _id
+    return res
+        .status(200)
+        .json(
+            new ApiResponse(200, group.members, "Group members retrieved successfully")
+        );
 });
 
 
@@ -173,5 +198,6 @@ export {
     createNewGroup,
     addExpenseToGroup,
     getGroupExpense,
-    getUserGroups
+    getUserGroups,
+    getGroupMembers
 };

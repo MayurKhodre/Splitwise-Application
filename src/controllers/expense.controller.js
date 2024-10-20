@@ -90,10 +90,7 @@ const editExpense = asyncHandler( async (req, res) => {
 })
 
 const getExpenses = asyncHandler(async (req, res) => {
-    // get the user from req.user
-    // fetch all the expenses of the user from the database
-    // return the expenses to the frontend    
-
+    // Get the user from req.user
     const user = req.user;
 
     if (!user) {
@@ -101,15 +98,19 @@ const getExpenses = asyncHandler(async (req, res) => {
     }
 
     try {
+        // Fetch all the expenses of the user from the database
         const expenses = await Expense.find({ paidBy: user._id });
 
-        if (!expenses || expenses.length === 0) {
-            throw new ApiError(404, "No expenses found for this user");
-        }
-
+        // Return an empty array if no expenses are found
         return res
             .status(200)
-            .json(new ApiResponse(200, expenses, "Expenses retrieved successfully"));
+            .json(
+                new ApiResponse(
+                    200, 
+                    expenses.length > 0 ? expenses : [], 
+                    expenses.length > 0 ? "Expenses retrieved successfully" : "No expenses found"
+                )
+            );
 
     } catch (error) {
         console.error('Error retrieving expenses:', error);
@@ -147,9 +148,37 @@ const deleteExpense = asyncHandler(async (req, res) => {
     }
 });
 
+const getExpenseById = asyncHandler(async (req, res) => {
+
+    const { expenseId } = req.params;
+
+    if (!expenseId) {
+        throw new ApiError(400, "Expense ID is required");
+    }
+
+    try {
+        // Fetch the expense from the database
+        const expense = await Expense.findById(expenseId);
+
+        if (!expense) {
+            throw new ApiError(404, "Expense not found");
+        }
+
+        // Return the expense details to the frontend
+        return res
+            .status(200)
+            .json(new ApiResponse(200, expense, "Expense details retrieved successfully"));
+
+    } catch (error) {
+        console.error('Error retrieving expense:', error);
+        throw new ApiError(500, "Internal Server Error");
+    }
+});
+
 export {
     addExpense,
     editExpense,
     getExpenses,
-    deleteExpense
+    deleteExpense,
+	getExpenseById
 };
