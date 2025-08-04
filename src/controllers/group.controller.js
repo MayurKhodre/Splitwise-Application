@@ -193,11 +193,146 @@ const getGroupMembers = asyncHandler(async (req, res) => {
         );
 });
 
+const deleteGroupExpense = asyncHandler(async (req, res) => {
+    try {
+        // Get groupId and expenseId from request parameters
+        const { groupId, expenseId } = req.params;
+        // Validate groupId and expenseId
+        if (!groupId || !expenseId) {
+            throw new ApiError(400, "Group ID and Expense ID are required");
+        }
+
+        // Find the group expense to ensure it exists
+        const groupExpense = await GroupExpense.findOne({
+            _id: expenseId,
+            group: groupId,
+        });
+
+        if (!groupExpense) {
+            throw new ApiError(404, "Group expense not found");
+        }
+
+        // Delete the group expense
+        await GroupExpense.deleteOne({ _id: expenseId });
+
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    null,
+                    "Group expense deleted successfully"
+                )
+            );
+    } catch (error) {
+        console.log("Error in deleting group expense: ", error);
+        throw new ApiError(500, "Failed to delete group expense");
+    }
+});
+
+const getGroupExpenseById = asyncHandler(async (req, res) => {
+    try {
+        // Extract groupId and expenseId from request parameters
+        const { groupId, expenseId } = req.params;
+
+        // Validate groupId and expenseId
+        if (!groupId || !expenseId) {
+            throw new ApiError(400, "Group ID and Expense ID are required");
+        }
+
+        // Find the group expense by its ID and group ID
+        const groupExpense = await GroupExpense.findOne({
+            _id: expenseId,
+            group: groupId,
+        }).populate("paidBy", "userName _id") // Populate details of the user who paid
+          .populate("splitBetween", "userName _id"); // Populate details of members the expense is split with
+
+        // If expense not found, throw an error
+        if (!groupExpense) {
+            throw new ApiError(404, "Group expense not found");
+        }
+
+        // Respond with the group expense details
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    groupExpense,
+                    "Group expense retrieved successfully"
+                )
+            );
+    } catch (error) {
+        console.log("Error in retrieving group expense: ", error);
+        throw new ApiError(500, "Failed to retrieve group expense");
+    }
+});
+
+const editGroupExpense = asyncHandler(async (req, res) => {
+    try {
+        // Extract groupId and expenseId from request parameters
+        const { groupId, expenseId } = req.params;
+
+        // Validate groupId and expenseId
+        if (!groupId || !expenseId) {
+            throw new ApiError(400, "Group ID and Expense ID are required");
+        }
+
+        // Extract fields to update from the request body
+        const { description, amount, paidBy, splitBetween } = req.body;
+
+        // Validate fields
+        if (
+            (!description || !description.trim()) &&
+            (typeof amount !== "number" || isNaN(amount) || amount <= 0) &&
+            (!paidBy || !paidBy.trim()) &&
+            (!Array.isArray(splitBetween) || splitBetween.length === 0)
+        ) {
+            throw new ApiError(400, "At least one valid field is required to update");
+        }
+
+        // Fetch the group expense by ID and ensure it belongs to the group
+        const groupExpense = await GroupExpense.findOne({
+            _id: expenseId,
+            group: groupId,
+        });
+
+        if (!groupExpense) {
+            throw new ApiError(404, "Group expense not found");
+        }
+
+        // Update the fields (explicit replacement for splitBetween)
+        if (description) groupExpense.description = description.trim();
+        if (amount) groupExpense.amount = amount;
+        if (paidBy) groupExpense.paidBy = paidBy;
+        if (splitBetween) groupExpense.splitBetween = splitBetween; // Replace array directly
+
+        // Save the updated expense to the database
+        const updatedGroupExpense = await groupExpense.save();
+
+        // Respond with the updated group expense details
+        return res
+            .status(200)
+            .json(
+                new ApiResponse(
+                    200,
+                    updatedGroupExpense,
+                    "Group expense updated successfully"
+                )
+            );
+    } catch (error) {
+        console.log("Error in updating group expense: ", error);
+        throw new ApiError(500, "Failed to update group expense");
+    }
+});
 
 export {
     createNewGroup,
     addExpenseToGroup,
     getGroupExpense,
     getUserGroups,
-    getGroupMembers
+    getGroupMembers,
+    deleteGroupExpense,
+    getGroupExpenseById,
+    editGroupExpense
 };

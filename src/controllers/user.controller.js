@@ -109,7 +109,7 @@ const loginUser = asyncHandler(async (req, res) => {
     // send accessToken and refresh token in cookie with user
 
     const { email, password } = req.body;
-
+    console.log('email: ', email, ' password: ', password);
     if (!email || !password) {
         throw new ApiError(400, "Please provide both email and password");
     }
